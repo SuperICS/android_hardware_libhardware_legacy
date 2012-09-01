@@ -116,7 +116,7 @@ acquire_wake_lock(int lock, const char* id)
 {
     initialize_fds();
 
-//    LOGI("acquire_wake_lock lock=%d id='%s'\n", lock, id);
+//    ALOGI("acquire_wake_lock lock=%d id='%s'\n", lock, id);
 
     if (g_error) return g_error;
 
@@ -137,7 +137,7 @@ release_wake_lock(const char* id)
 {
     initialize_fds();
 
-//    LOGI("release_wake_lock id='%s'\n", id);
+//    ALOGI("release_wake_lock id='%s'\n", id);
 
     if (g_error) return g_error;
 
@@ -148,7 +148,7 @@ release_wake_lock(const char* id)
 int
 set_last_user_activity_timeout(int64_t delay)
 {
-//    LOGI("set_last_user_activity_timeout delay=%d\n", ((int)(delay)));
+//    ALOGI("set_last_user_activity_timeout delay=%d\n", ((int)(delay)));
 
     int fd = open(AUTO_OFF_TIMEOUT_DEV, O_RDWR);
     if (fd >= 0) {
@@ -169,11 +169,11 @@ set_screen_state(int on)
 {
     QEMU_FALLBACK(set_screen_state(on));
 
-    LOGI("*** set_screen_state %d", on);
+    ALOGI("*** set_screen_state %d", on);
 
     initialize_fds();
 
-    //LOGI("go_to_sleep eventTime=%lld now=%lld g_error=%s\n", eventTime,
+    //ALOGI("go_to_sleep eventTime=%lld now=%lld g_error=%s\n", eventTime,
       //      systemTime(), strerror(g_error));
 
     if (g_error)
@@ -190,7 +190,7 @@ set_screen_state(int on)
     len = write(g_fds[REQUEST_STATE], buf, len);
     if(len < 0) {
     failure:
-        LOGE("Failed setting last user activity: g_error=%d\n", g_error);
+        ALOGE("Failed setting last user activity: g_error=%d\n", g_error);
     }
     return 0;
 }
@@ -213,36 +213,36 @@ logical(int state) {
     char pDirName[128]="/sys/devices/system/memory/memory", fDirName[128], strState[7]="/state";
 
     if(property_get("ro.dev.dmm.dpd.block", strBlock, "0") <= 0) {
-        LOGE("Failed to property_get() block number:%s\n",strBlock);
+        ALOGE("Failed to property_get() block number:%s\n",strBlock);
         return -1;
     }
     else
-        if (DMMDEBUG) LOGW("strBlock = %s\n", strBlock);
+        if (DMMDEBUG) ALOGW("strBlock = %s\n", strBlock);
 
     sprintf(fDirName, "%s%s%s", pDirName, strBlock, strState);
 
-    if(DMMDEBUG) LOGW("Directory Location = %s\n", fDirName);
+    if(DMMDEBUG) ALOGW("Directory Location = %s\n", fDirName);
 
     if((fd_State=open(fDirName, O_RDWR)) < 0) {
-        LOGE("Failed to open %s: %d", fDirName, -errno);
+        ALOGE("Failed to open %s: %d", fDirName, -errno);
         return -errno;
     }
 
     if(state == 0) {
         if(write(fd_State, "offline", strlen("offline")) == -1) {
-            LOGE("Logical Remove of Unstable Memory: Failed (-%d)", errno);
+            ALOGE("Logical Remove of Unstable Memory: Failed (-%d)", errno);
             close(fd_State);
             return -errno;
         }
-        if(DMMDEBUG) LOGW("Logical Remove of Unstable Memory: Succeded !");
+        if(DMMDEBUG) ALOGW("Logical Remove of Unstable Memory: Succeded !");
     }
     else {
         if(write(fd_State, "online", strlen("online")) == -1) {
-            LOGE("Logical Hotplug of Unstable Memory: Failed (-%d)", errno);
+            ALOGE("Logical Hotplug of Unstable Memory: Failed (-%d)", errno);
             close(fd_State);
             return -errno;
         }
-        if(DMMDEBUG) LOGW("Logical Hotplug of Unstable Memory: Succeded !");
+        if(DMMDEBUG) ALOGW("Logical Hotplug of Unstable Memory: Succeded !");
     }
     close(fd_State);
     return 0;
@@ -257,51 +257,51 @@ physical(int state) {
     char removePath[128]="/sys/devices/system/memory/remove";
 
     if(property_get("ro.dev.dmm.dpd.start_address", str_movable_start_bytes, "0") <= 0) {
-        LOGE("Failed to property_get() movable start bytes:%s\n",str_movable_start_bytes);
+        ALOGE("Failed to property_get() movable start bytes:%s\n",str_movable_start_bytes);
         return -1;
     }
     else
-        if(DMMDEBUG) LOGW("str_movable_start_bytes = %s\n", str_movable_start_bytes);
+        if(DMMDEBUG) ALOGW("str_movable_start_bytes = %s\n", str_movable_start_bytes);
 
     if(state == 0) {
         if((fd_Physical=open(removePath, O_WRONLY)) < 0) {
-            LOGE("Failed to open %s: %d", removePath, -errno);
+            ALOGE("Failed to open %s: %d", removePath, -errno);
             return -errno;
         }
 
         if(write(fd_Physical, str_movable_start_bytes, strlen(str_movable_start_bytes)) == -1) {
-            LOGE("Physical Remove of Unstable Memory: Failed (-%d)", errno);
-            LOGE("Writing %s to %s: Failed !", str_movable_start_bytes, removePath);
+            ALOGE("Physical Remove of Unstable Memory: Failed (-%d)", errno);
+            ALOGE("Writing %s to %s: Failed !", str_movable_start_bytes, removePath);
             close(fd_Physical);
             return -errno;
         }
-        if(DMMDEBUG) LOGW("Physical Remove of Unstable Memory: Succeded !");
+        if(DMMDEBUG) ALOGW("Physical Remove of Unstable Memory: Succeded !");
     }
     else {
         if((fd_Physical=open(probePath, O_WRONLY)) < 0) {
-            LOGE("Failed to open %s: %d", probePath, -errno);
+            ALOGE("Failed to open %s: %d", probePath, -errno);
             return -errno;
         }
 
         if(write(fd_Physical, str_movable_start_bytes, strlen(str_movable_start_bytes)) == -1) {
-            LOGE("Physical HotPlug (Probe) of Unstable Memory: Failed (-%d)", errno);
-            LOGE("Writing %s to %s: Failed !", str_movable_start_bytes, probePath);
+            ALOGE("Physical HotPlug (Probe) of Unstable Memory: Failed (-%d)", errno);
+            ALOGE("Writing %s to %s: Failed !", str_movable_start_bytes, probePath);
             close(fd_Physical);
             return -errno;
         }
 
         if((fd_Physical=open(activePath, O_WRONLY)) < 0) {
-            LOGE("Failed to open %s: %d", activePath, -errno);
+            ALOGE("Failed to open %s: %d", activePath, -errno);
             return -errno;
         }
 
         if(write(fd_Physical, str_movable_start_bytes, strlen(str_movable_start_bytes)) == -1) {
-            LOGE("Physical HotPlug (Active) of Unstable Memory: Failed (-%d)", errno);
-            LOGE("Writing %s to %s: Failed !", str_movable_start_bytes, activePath);
+            ALOGE("Physical HotPlug (Active) of Unstable Memory: Failed (-%d)", errno);
+            ALOGE("Writing %s to %s: Failed !", str_movable_start_bytes, activePath);
             close(fd_Physical);
             return -errno;
         }
-        if(DMMDEBUG) LOGW("Physical HotPlug of Unstable Memory: Succeded !");
+        if(DMMDEBUG) ALOGW("Physical HotPlug of Unstable Memory: Succeded !");
     }
     close(fd_Physical);
     return 0;
@@ -309,7 +309,7 @@ physical(int state) {
 
 int
 set_unstable_memory_state(int state) {
-    LOGW("UnstableMemory(%d)", state);
+    ALOGW("UnstableMemory(%d)", state);
 
     if(state == 0) {
         if(logical(0) != 0) {
